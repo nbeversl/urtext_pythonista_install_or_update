@@ -1,3 +1,4 @@
+import os 
 from app_single_launch import AppSingleLaunch
 from urtext_pythonista.urtext_pythonista import UrtextEditor
 
@@ -9,7 +10,7 @@ from urtext_pythonista.urtext_pythonista import UrtextEditor
 #    of your Urtext project inside of the iCloud Drive/Pythonista 3
 #    folder.
 #
-path = '/Urtext Projects/My Urtext Project' # (example)
+path = 'Urtext Projects/My Urtext Project' # (example)
 #
 # 3. For a single-step launch, using the iOS Shortcuts app,
 #    create a shorcut that opens the URL:
