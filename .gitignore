@@ -1,2 +1,2 @@
-.DS_Store
-/_diff
+**/**.DS_Store
+**/_diff
