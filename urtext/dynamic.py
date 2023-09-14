@@ -47,7 +47,6 @@ class UrtextDynamicDefinition:
 		self.contents = None
 		self.target_ids = []
 		self.targets = []
-		self.target_file = None
 		self.included_nodes = []
 		self.excluded_nodes = []
 		self.spaces = 0
@@ -58,7 +57,7 @@ class UrtextDynamicDefinition:
 		self.param_string = param_string
 		self.init_self(param_string)	
 		self.source_id = None # set by node once compiled
-		if not self.show: self.show = '$link\n'
+		if not self.show: self.show = '$_link\n'
 
 	def init_self(self, contents):
 
@@ -82,12 +81,11 @@ class UrtextDynamicDefinition:
 				if output_target:
 					self.targets.append(output_target.group())
 				else:
-					self.target_ids.append(get_id_from_link(argument_string))
-					self.targets.append(argument_string)
-				continue
-
-			if func == 'FILE':
-				self.target_file = argument_string
+					target_id = get_id_from_link(argument_string)
+					if target_id:
+						self.target_ids.append(target_id)
+					else:
+						self.targets.append(argument_string)
 				continue
 
 			if func == "SHOW":
@@ -110,7 +108,7 @@ class UrtextDynamicDefinition:
 			self.returns_text = False
 
 	def preserve_title_if_present(self, target):
-		if target == '@self':
+		if target == '@self' and self.source_id in self.project.nodes:
 			return ' ' + self.project.nodes[self.source_id].title + syntax.title_marker +'\n'
 		node_id = get_id_from_link(target)
 		if node_id in self.target_ids and node_id in self.project.nodes and self.project.nodes[node_id].first_line_title:
@@ -121,7 +119,9 @@ class UrtextDynamicDefinition:
 
 		outcome = []
 		phases_to_process = [p for p in phases if p <= max_phase]
-		all_operations = sorted(list(self.operations), key = lambda op: op.phase)
+		all_operations = sorted(
+			list(self.operations), 
+			key = lambda op: op.phase)
 
 		for p in phases_to_process:	
 			if p == 200: 
@@ -158,7 +158,7 @@ class UrtextDynamicDefinition:
 		return False
 
 	def get_definition_text(self):
-		return  '\n' + ''.join([
+		return '\n' + ''.join([
 			syntax.dynamic_def_opening_wrapper,
 			'\n'.join([line.strip() for line in self.contents.split('\n')]),
 			syntax.dynamic_def_closing_wrapper
@@ -167,30 +167,24 @@ class UrtextDynamicDefinition:
 	def process(self, flags=[]):
 		self.flags = flags
 
-		# if self.target_id == None and not self.target_file: 
-		# 	return self.project._log_item(None, ''.join([
-		# 			'Dynamic definition in ',
-		# 			syntax.link_opening_wrapper,
-		# 			self.source_id,
-		# 			syntax.link_closing_wrapper,
-		# 			' has no target']))
-
 		for target_id in self.target_ids:
-
+			if self.source_id not in self.project.nodes:
+				continue
 			if target_id not in self.project.nodes:
-				self.project._log_item(None, ''.join([
-							'Dynamic node definition in',
+				filename = self.project.nodes[self.source_id].filename
+				self.project._log_item(filename, ''.join([
+							'Dynamic node definition in node ',
 							syntax.link_opening_wrapper,
 							self.source_id,
 							syntax.link_closing_wrapper,
-							' points to nonexistent node ',
-							syntax.link_opening_wrapper,
+							' pointing to nonexistent node ',
+							'|? ',
 							target_id,
 							syntax.link_closing_wrapper]))
 
 		output = self.process_output()
 		if output == False: return
-		if not self.returns_text and not self.target_file: return
+		if not self.returns_text: return
 		if self.spaces: output = indent(output, spaces=self.spaces)
 		return output
 

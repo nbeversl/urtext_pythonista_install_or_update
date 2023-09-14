@@ -17,16 +17,25 @@ class AutoCompleter:
 		self.dropDown.hidden = True
 		self.size_fields(view_width, view_height, layout)
 		self.dropDown.data_source = ui.ListDataSource([])
+		self.current_entry = ''
+		self.current_items = []
 
 	def textfield_did_change(self, textfield):
-		entry = textfield.text.lower()
+		new_entry = textfield.text.lower()
+		if len(new_entry) > len(self.current_entry):
+			items = self.current_items
+		else:
+			items = self.items
+		
 		fuzzy_options = sorted(
-			self.items,
+			items,
 			key = lambda option: fuzz.ratio(
-				entry,
+				new_entry,
 				self.items_comparision[option]), 
 			reverse=True)
 		self.dropDown.data_source.items=fuzzy_options[:30]
+		self.current_entry = new_entry
+		self.current_items = fuzzy_options
 
 	def hide(self):		
 		self.dropDown.hidden = True
@@ -59,6 +68,7 @@ class AutoCompleter:
 				self.dropDown.height = self.view_height
 			else:
 				self.dropDown.height = self.search.height * len(self.items)
+			self.current_items = self.items
 
 	def show(self):
 		self.search.hidden = False

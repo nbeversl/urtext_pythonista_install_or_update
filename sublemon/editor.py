@@ -25,6 +25,7 @@ class BaseEditor(ui.View):
 			self.theme = args['theme']
 
 		self.current_open_file = None
+		self.current_open_file_original_contents = None
 		self.saved = None
 		self.width, self.height = ui.get_screen_size()
 		self.frame = (0, self.layout['text_view_distance_from_top'], self.width, self.height)
@@ -56,13 +57,15 @@ class BaseEditor(ui.View):
 		self.add_subview(self.autoCompleter.search)
 		self.add_subview(self.autoCompleter.dropDown)
 
-	def open_file(self, sender):
+	def open_file(self, filename, save_first=True):
+		if save_first and self.current_open_file != filename:
+		 	self.save(None)
 		open_file = dialogs.pick_document()
 		if open_file:
-			with open(open_file, 'r', encoding='utf-8') as d:
-				contents = d.read()
+			contents = self.get_file_contents(open_file)
 			self.tv.text=contents
 			self.current_open_file = open_file
+			self.current_open_file_original_contents = contents
 			self.refresh_syntax_highlighting()
 
 	def init_text_view(self):
@@ -84,16 +87,20 @@ class BaseEditor(ui.View):
 		button_width_with_spacing = int( button_space_per_line / num_buttons )
 		while button_width_with_spacing < ( self.layout['min_button_width'] + self.layout['button_horizontal_spacing']):
 			num_button_lines += 1
-			button_width_with_spacing = int( ( button_space_per_line * num_button_lines ) / ( num_buttons + 1 ))
-
+			button_width_with_spacing = int( 
+					( button_space_per_line * num_button_lines ) / num_buttons 
+					)
 		button_width = button_width_with_spacing - self.layout['button_horizontal_spacing']
+
 		button_x_position = self.layout['button_horizontal_spacing']
 		button_y_position = self.layout['button_vertical_spacing']
 		button_line = ui.View()
+		button_line.flex = "WHLR"
 		button_line.background_color = self.base_editor_theme['button_line_background_color']
 		button_line.height = self.layout['button_height'] * num_button_lines 
 		button_line.height += self.layout['button_vertical_spacing'] * num_button_lines
 
+		buttons_this_line = 1
 		for button_character in buttons:
 			new_button = ui.Button(title=button_character)
 			new_button.action = buttons[button_character]
@@ -129,24 +136,39 @@ class BaseEditor(ui.View):
 			message='Note files will be saved in the Pythonista folder, also accessible via iCloud')
 		self.save(None)
 
-	def save(self, sender):
+	def save(self, sender, save_as=True):
 		if self.saved:
-			return
+			return False
 		if self.current_open_file:
-			filename = os.path.basename(self.current_open_file)
-			copy_of_file = os.path.join(
-				settings['base_dir'],
-				filename)
-
+			current_file_contents = self.get_file_contents(self.current_open_file)
+			if self.current_open_file_original_contents != current_file_contents:
+				r = self.handle_changed_contents(self.current_open_file) 
+				#== 'Discard (Keep contents on disc)':
+				print(r)
+				return False
 			contents = self.tv.text 
-			with open(copy_of_file, 'w', encoding='utf-8') as d:
+			with open(self.current_open_file, 'w', encoding='utf-8') as d:
 				d.write(contents)
 			self.saved = True
+			self.current_open_file_original_contents = contents
 			console.hud_alert('Saved','success',0.5)
-		else:
-			self.save_as(None)
+			return True
+		elif save_as:
+			return self.save_as(None)
+		return False
+
+	def handle_changed_contents(self, filename):
+		return dialogs.list_dialog(
+			title='File Contents Changed', 
+			items=[
+				'Overwrite'
+				'Discard (Keep contents on disc)',
+			])
+
+	def get_file_contents(self, filename):
+		with open(filename, 'r', encoding='utf-8') as d:
+			contents = d.read()
+		return contents
 
 	def refresh_syntax_highlighting(self, text=''):   
 		self.syntax_highlighter.setAttribs(self.tv, self.tvo, self.theme)
-	
-

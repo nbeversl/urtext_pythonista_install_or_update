@@ -16,6 +16,19 @@ class PopNode(UrtextExtension):
         filename, 
         file_pos=None,  
         node_id=None):
+
+        return self.project.execute(
+            self._pop_node,
+            param_string, 
+            filename, 
+            file_pos=file_pos,  
+            node_id=node_id)
+
+    def _pop_node(self,
+        param_string, 
+        filename, 
+        file_pos=None,  
+        node_id=None):
  
         if not node_id:
             node_id = self.project.get_node_id_from_position(
@@ -36,7 +49,7 @@ class PopNode(UrtextExtension):
         filename = self.project.nodes[node_id].filename
         file_contents = self.project.files[filename]._get_file_contents()
         popped_node_id = node_id
-        popped_node_contents = file_contents[start:end].strip()
+        popped_node_contents = file_contents[start:end+1].strip()
         parent_id = self.project.nodes[node_id].parent.id
         
         if self.project.settings['breadcrumb_key']:
@@ -74,6 +87,19 @@ class PullNode(UrtextExtension):
     name=['PULL_NODE']
 
     def pull_node(self, 
+        string, 
+        destination_filename, 
+        file_pos=0,
+        col_pos=0):
+
+        return self.project.execute(
+            self._pull_node,
+            string, 
+            destination_filename, 
+            file_pos=file_pos,
+            col_pos=col_pos)
+
+    def _pull_node(self, 
         string, 
         destination_filename, 
         file_pos=0,
@@ -150,8 +176,6 @@ class PullNode(UrtextExtension):
             self.project.files[destination_filename]._set_file_contents(replacement_contents)
             self.project._parse_file(destination_filename)
 
-        if root:
-            return os.path.join(self.project.entry_path, source_filename)
-        
+        if root == True: return source_filename
         return None
         

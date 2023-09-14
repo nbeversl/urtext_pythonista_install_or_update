@@ -22,8 +22,10 @@ import re
 
 if os.path.exists(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sublime.txt')):
     import Urtext.urtext.syntax as syntax
+    from Urtext.urtext.node import UrtextNode
 else:
     import urtext.syntax as syntax
+    from urtext.node import UrtextNode
 
 class DynamicOutput():
 
@@ -38,21 +40,14 @@ class DynamicOutput():
         self.contents = ''
         self.other_format_keys = {}
         self.project_settings = project_settings
-        self.needs_title = False
-        self.needs_meta = False
-        self.needs_link = False
-        self.needs_date = False
         self.needs_contents = False
-        self.needs_entry = False
         self.needs_other_format_keys = []        
-        self.needs_key = False
-        self.needs_values = False
         self.format_string = format_string
 
         #TODO : randomize -- must not be any regex operators.
         self.shah = '%&&&&888'
         self.values = []
-        self.item_format = self._tokenize_format();
+        self.item_format = self._tokenize_format()
 
         self._build_needs_list()
 
@@ -73,48 +68,35 @@ class DynamicOutput():
 
         defined_list = [
             'title',
-            'link',
-            'date',
-            'meta',
-            'contents',
-            'entry' # for metadata collection
+            '_link',
+            '_date',
+            '_meta',
+            '_contents',
+            '_entry',
         ]
-
-        if self.shah + '$title' in self.item_format:
-            self.needs_title = True
-        if self.shah + '$link' in self.item_format:
-            self.needs_link = True
-        if self.shah + '$date' in self.item_format:
-            self.needs_date = True
-        if self.shah + '$meta' in self.item_format:
-            self.needs_meta = True
-        if self.shah + '$entry' in self.item_format:
-            self.needs_entry = True
-        if self.shah + '$key' in self.item_format:
-            self.needs_key = True
-        if self.shah + '$values' in self.item_format:
-            self.needs_values = True
 
         contents_syntax = re.compile(self.shah+'\$contents'+'(:\d*)?', re.DOTALL)      
         contents_match = re.search(contents_syntax, self.item_format)
         if contents_match:
             self.needs_contents = True
 
-        all_format_keys = re.findall( self.shah+'\$[\.A-Za-z0-9_-]*', self.item_format, re.DOTALL)                   
+        all_format_keys = re.findall(
+            self.shah+'\$[\.A-Za-z0-9_-]*', 
+            self.item_format, 
+            re.DOTALL)
+
         for match in all_format_keys:
             meta_key = match.strip(self.shah+'$') 
             if meta_key not in defined_list:
                 self.needs_other_format_keys.append(meta_key)
 
     def output(self):
-
+        
         self.item_format = self.item_format.replace(self.shah + '$title', self.title)
-        self.item_format = self.item_format.replace(self.shah + '$link', self.link)
-        self.item_format = self.item_format.replace(self.shah + '$date', self.date)
-        self.item_format = self.item_format.replace(self.shah + '$meta', self.meta)
-        self.item_format = self.item_format.replace(self.shah + '$entry', self.entry)
-        self.item_format = self.item_format.replace(self.shah + '$key', self.key)
-        self.item_format = self.item_format.replace(self.shah + '$values', str(self.values))
+        self.item_format = self.item_format.replace(self.shah + '$_link', self.link)
+        self.item_format = self.item_format.replace(self.shah + '$_date', self.date)
+        self.item_format = self.item_format.replace(self.shah + '$_meta', self.meta)
+        self.item_format = self.item_format.replace(self.shah + '$_entry', self.entry)
 
         contents_syntax = re.compile(self.shah+'\$contents'+'(:\d*)?', re.DOTALL)      
         contents_match = re.search(contents_syntax, self.item_format)
@@ -139,9 +121,9 @@ class DynamicOutput():
                     
         # all other meta keys
         for meta_key in self.other_format_keys:
-            token = self.shah+'$'+meta_key
+            token = self.shah + '$' + meta_key
             value = ''.join(self.other_format_keys[meta_key])
-            self.item_format = self.item_format.replace(token, value );    
+            self.item_format = self.item_format.replace(token, value)
 
         return self.item_format
 

@@ -71,13 +71,13 @@ class NodeMetadata:
                         keyname,
                         value,
                         recursive=tag_descendants,
-                        position=m.start(), 
+                        position=m.start(),
                         end_position=m.start() + len(m.group()))
                 if tag_children or tag_descendants:
                     self.dynamic_entries.append(entry)
                 if tag_self and value not in self.get_values(keyname):
                     self.add_entry(
-                        keyname, 
+                        keyname,
                         value,
                         position=m.start(),
                         end_position=m.start() + len(m.group()))
@@ -141,8 +141,14 @@ class NodeMetadata:
         t = self.get_entries('inline_timestamp')
         if t:
             t = sorted(t, key=lambda i: i.timestamps[0].datetime) 
-            self.add_entry('_oldest_timestamp', t[0].timestamps[0].wrapped_string)
-            self.add_entry('_newest_timestamp', t[-1].timestamps[0].wrapped_string)
+            self.add_entry(
+                '_oldest_timestamp', 
+                t[0].timestamps[0].wrapped_string,
+                position=t[0].position)
+            self.add_entry(
+                '_newest_timestamp',
+                t[-1].timestamps[0].wrapped_string,
+                position=t[-1].position)
 
     def get_first_value(self, 
         keyname, 
@@ -189,7 +195,8 @@ class NodeMetadata:
     def get_values(self, 
         keyname,
         use_timestamp=False,
-        lower=False):
+        lower=False,
+        convert_nodes_to_links=False):
 
         values = []
         keyname = keyname.lower()
@@ -199,6 +206,13 @@ class NodeMetadata:
             values = [e.timestamps for e in entries]
         else:
             values = [e.value for e in entries]        
+        if convert_nodes_to_links:
+            for index, value in enumerate(values):
+                if not isinstance(value, str):
+                    values[index] = ''.join([
+                        syntax.link_opening_wrapper,
+                        value.id,
+                        syntax.link_closing_wrapper])
         if lower:
             return [v.lower() if isinstance(v, str) else v for v in values]
         return values
@@ -255,7 +269,6 @@ class NodeMetadata:
             del self.entries_dict['#']
 
     def get_oldest_timestamp(self):
-
         if self.get_entries('_oldest_timestamp'):
             return self.get_entries('_oldest_timestamp')[0].timestamps[0]
         all_timestamps = []

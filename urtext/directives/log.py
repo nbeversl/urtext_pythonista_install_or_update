@@ -10,18 +10,20 @@ class Log(UrtextDirective):
 
 	name = ["LOG"]    
 	phase = 300
-			
+
 	def dynamic_output(self, node_list):
 		output = []
 		for k in self.project.messages:
 			if k:
 				file = syntax.file_link_opening_wrapper + k + syntax.link_closing_wrapper
 			else:
-				file = '(no file) '
+				file = '(no file)'
 			for message in self.project.messages[k]:
 				output.append(''.join([
-	                'in file : ',
+	                'in file ',
 	                file,
-	                '\n']) + message)
-
+	                ' ',
+	                message,
+	                '\n'
+	                ]))
 		return '\n'.join(output) + '\n'
