@@ -51,6 +51,7 @@ class UrtextEditor(BaseEditor):
 			'insert_at_next_line' : self.insert_at_next_line,
 			'popup' : self.popup,
 			'refresh_open_file' : self.refresh_open_file_if_modified,
+			'write_to_console' : print,
 		}
 
 		self._UrtextProjectList = ProjectList(
@@ -152,12 +153,12 @@ class UrtextEditor(BaseEditor):
 	def run_chosen_option(self, function):
 		self.menu_options[function](None)
 
-	def insert_dynamic_def(self,sender):
-		# broken right now
-		node_id = self.new_inline_node(None, locate_inside=False)
+	def insert_dynamic_def(self, sender):
 		position = self.tv.selected_range[0]
-		self.tv.replace_range(self.tv.selected_range, '\n\n[[ ID(>' + node_id + ')\n+( ) +( )\n-( ) -( )\n ]]')
-		self.tv.selected_range = (position + 12, position + 12)
+		self.tv.replace_range(
+			self.tv.selected_range, 
+			'\n\n[[ >( )\n+( ) +( )\n-( ) -( )\n ]]')
+		self.tv.selected_range = (position + 8, position + 8)
 
 	def insert_backtick(self, sender):
 		self.tv.replace_range(self.tv.selected_range, '`')
@@ -209,6 +210,7 @@ class UrtextEditor(BaseEditor):
 			console.hud_alert('Error happened. Check the Urtext console' ,'error',2)
 
 	def error_message(self, message):
+		console.hud_alert(message, 'error', 5)
 		print(message)
 
 	def reload_projects(self, sender):
@@ -243,8 +245,16 @@ class UrtextEditor(BaseEditor):
 	
 	def refresh_open_file_if_modified(self, filename):
 		if filename == self.current_open_file:
-			self.open_file(self.current_open_file, save_first=False)
-				
+			self._UrtextProjectList.current_project.visit_file(
+				filename)
+			self.open_file(
+				self.current_open_file,
+				save_first=False)
+			console.hud_alert(
+				'File contents refreshed',
+				'info',
+				3)
+
 	def refresh_syntax_highlighting(self):
 		position = self.tv.selected_range
 		self.tv.scroll_enabled= False     
@@ -255,9 +265,19 @@ class UrtextEditor(BaseEditor):
 		except ValueError:
 			pass
 	
-	def open_file(self, filename, save_first=True):
+	def open_file(
+		self, 
+		filename, 
+		save_first=None):
+
+		if save_first == None:
+			save_first = True
+
 		if not os.path.exists(filename):
-			console.hud_alert('FILE not found. Synced?','error',1)
+			console.hud_alert(
+				'FILE not found. Synced?',
+				'error',
+				1)
 			return None
 		
 		if save_first and self.current_open_file != filename:
@@ -265,7 +285,7 @@ class UrtextEditor(BaseEditor):
 
 		contents = self.get_file_contents(filename)
 		# prevents issue where the text area is too big
-		# for the new contents:
+		# for the new contents:k
 		self.tv.text=''
 		#
 		self.tv.text=contents
@@ -282,6 +302,7 @@ class UrtextEditor(BaseEditor):
 		self.open_file(filename)
 		self.tv.selected_range = (position, position)
 		self.tvo.scrollRangeToVisible(NSRange(position, 1)) 
+
 
 	def timestamp(self, sender):
 		self.tv.replace_range(
@@ -335,10 +356,10 @@ class UrtextEditor(BaseEditor):
 		self.urtext_save()
 		selection = self.tv.selected_range
 		line, cursor = get_full_line(selection[1], self.tv)
-		future = self._UrtextProjectList.current_project.tag_other_node(
+		self._UrtextProjectList.current_project.tag_other_node(
 			line,
-			cursor)
-		#self.refresh_open_file_if_modified(future)
+			cursor,
+			open_files=[self.current_open_file])
 
 	def meta_autocomplete(self, sender): #works	
 		self.autoCompleter.set_items(

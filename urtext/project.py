@@ -70,7 +70,7 @@ class UrtextProject:
         self.settings['project_title'] = self.entry_point # default
         self.editor_methods = editor_methods
         self.is_async = True
-        #self.is_async = False # development
+        self.is_async = False # development
         self.time = time.time()
         self.last_compile_time = 0
         self.nodes = {}
@@ -110,7 +110,7 @@ class UrtextProject:
             self.entry_path = os.path.dirname(self.entry_point)            
             self._parse_file(self.entry_point)
         else:
-            return self.handle_message('%s does not exist' % self.entry_point)
+            return self.handle_error_message('Project path does not exist: %s' % self.entry_point)
 
         while len(self.settings['paths']) > num_paths or len(self.settings['file_extensions']) > num_file_extensions:
             num_paths = len(self.settings['paths'])
@@ -118,6 +118,13 @@ class UrtextProject:
             for file in self._get_included_files():
                 if file not in self.files:
                     self._parse_file(file)
+
+        if len(self.nodes) == 0:
+            return self.handle_error_message(
+                '\n'.join([
+                    'No Urtext files are in this folder.',
+                    'To create one, press Ctrl-Shift-;'
+                    ]))
 
         for node_id in self.nodes:
             self.nodes[node_id].metadata.convert_hash_keys()
@@ -134,7 +141,7 @@ class UrtextProject:
         self.last_compile_time = time.time() - self.time
         self.time = time.time()
         self._run_hook('after_project_initialized')
-        self.handle_message(
+        self.handle_info_message(
             '"'+self.settings['project_title']+'" compiled')
     
     def get_file_position(self, node_id, position): 
@@ -321,14 +328,14 @@ class UrtextProject:
         changed_ids = {}
         messages = []
         
-        # first resolve duplicates in file
+        # resolve duplicates in file
         file_node_ids = [n.id for n in file_obj.nodes]
         for node in list(file_obj.nodes):
             if file_node_ids.count(node.id) > 1:
                 resolved_new_id = node.resolve_duplicate_id()
                 if not resolved_new_id:
                     duplicate_nodes[node.id] = file_obj.filename
-                    messages.append( 
+                    messages.append(
                         'Cannot resolve duplicate ID in this file "%s"' % node.id)
                     del node
                     continue
@@ -343,6 +350,7 @@ class UrtextProject:
                     if not resolved_id:
                         del node
                         continue
+                    changed_ids[node.id] = resolved_id
                     node.apply_id(resolved_id)
                 else:
                     resolved_id = node.resolve_duplicate_id()
@@ -399,15 +407,15 @@ class UrtextProject:
 
     def _reject_definition(self, target_id, definition):
         message = ''.join([
-                'Dynamic node ', 
+                '\nDynamic node ', 
                 syntax.link_opening_wrapper,
                 target_id,
                 syntax.link_closing_wrapper,
-                ' already has a definition in ', 
+                '\nalready has a definition in ', 
                 syntax.link_opening_wrapper,
                 self.dynamic_definitions[target_id].source_id,
                 syntax.link_closing_wrapper,
-                ' -- skipping the definition in ',
+                '\nskipping the definition in ',
                 syntax.link_opening_wrapper,
                 definition.source_id,
                 syntax.link_closing_wrapper,
@@ -682,7 +690,7 @@ class UrtextProject:
                 message = node_id + ' not in current project'
             else:
                 message = 'Project is still compiling' 
-            return self.handle_message(message)
+            return self.handle_info_message(message)
 
         node_range = (
             self.nodes[node_id].ranges[0][0],
@@ -705,21 +713,23 @@ class UrtextProject:
             if not self.compiled:
                 if not self.home_requested:
                     self.message_executor.submit(
-                        self.handle_message,
+                        self.handle_info_message,
                         'Project is compiling. Home will be shown when found.')
                     self.home_requested = True
                 timer = threading.Timer(.5, self.open_home)
                 return timer.start()
             else:
                 self.home_requested = False
-                return self.handle_message(
+                return self.handle_info_message(
                     'Project compiled. No home node for this project')
         self.home_requested = False
         return self.open_node(self.settings['home'])
  
-    def handle_message(self, message):
-        print(message)
-        self.run_editor_method('popup',message)
+    def handle_info_message(self, message):
+        self.run_editor_method('popup', message)
+
+    def handle_error_message(self, message):
+        self.run_editor_method('error_message', message)
 
     def all_nodes(self, as_nodes=False):
 
@@ -1096,25 +1106,25 @@ class UrtextProject:
                 self.files[filename]._set_file_contents(new_contents, compare=False)
                 return self.execute(self._on_modified, filename)
 
-    def on_modified(self, filename):
-        if self.compiled:
-            return self.execute(self._on_modified, filename)
-        return []
+    def on_modified(self, filename):    
+        return self.execute(self._on_modified, filename)
     
     def _on_modified(self, filename):
-        modified_files = [filename]
-        self._parse_file(filename)
-        self._reverify_links(filename)
-        if filename in self.files:
-            modified_files.extend(
-                self._compile_file(
-                filename,
-                events=['-file_update']))
-        self._sync_file_list()
-        if filename in self.files:
-            self._run_hook('on_file_modified', filename)
-        self._refresh_modified_files(modified_files)
-        return modified_files
+        if self.compiled:
+            modified_files = [filename]
+            self._parse_file(filename)
+            self._reverify_links(filename)
+            if filename in self.files:
+                modified_files.extend(
+                    self._compile_file(
+                    filename,
+                    events=['-file_update']))
+            self._sync_file_list()
+            if filename in self.files:
+                self._run_hook('on_file_modified', filename)
+            self._refresh_modified_files(modified_files)
+            return modified_files
+        return []
         
     def visit_node(self, node_id):
         return self.execute(self._visit_node, node_id)
@@ -1274,7 +1284,7 @@ class UrtextProject:
                 if node.dynamic:
                     continue
                 matches = []
-                contents = node.content_only()
+                contents = node.contents()
                 lower_contents = contents.lower()           
 
                 for v in values:
@@ -1436,44 +1446,6 @@ class UrtextProject:
             return target
         
     """ Metadata Handling """
-
-    def tag_other_node(self, full_line, cursor, metadata={}, open_files=[]):
-        return self.execute(
-            self._tag_other_node, 
-            full_line,
-            cursor, 
-            metadata=metadata, 
-            open_files=open_files)
-        
-    def _tag_other_node(self, full_line, cursor, metadata={}, open_files=[]):
-        """adds a metadata tag to a node programmatically"""
-        
-        link = self.parse_link(full_line, col_pos=cursor)
-        if not link: return
-
-        if metadata == {}:
-            if len(self.settings['tag_other']) < 2: return None
-            metadata = { self.settings['tag_other'][0] : self.settings['tag_other'][1] + ' ' + self.timestamp().wrapped_string }
-        territory = self.nodes[link['node_id']].ranges
-        metadata_contents = UrtextNode.build_metadata(metadata)
-
-        filename = self.nodes[link['node_id']].filename
-        full_file_contents = self.files[filename]._get_file_contents()
-        tag_position = territory[-1][1]
-
-        separator = '\n'
-        if self.nodes[link['node_id']].compact:
-            separator = ' '
-
-        new_contents = ''.join([
-            full_file_contents[:tag_position],
-            separator,
-            metadata_contents,
-            separator,
-            full_file_contents[tag_position:]])
-        self.files[filename]._set_file_contents(new_contents)
-        s = self.on_modified(filename)
-        return s
  
     def _add_sub_tags(self, 
         entry,

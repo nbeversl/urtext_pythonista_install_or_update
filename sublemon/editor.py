@@ -151,7 +151,6 @@ class BaseEditor(ui.View):
 				d.write(contents)
 			self.saved = True
 			self.current_open_file_original_contents = contents
-			console.hud_alert('Saved','success',0.5)
 			return True
 		elif save_as:
 			return self.save_as(None)
