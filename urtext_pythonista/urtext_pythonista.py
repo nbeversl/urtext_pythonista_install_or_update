@@ -50,7 +50,7 @@ class UrtextEditor(BaseEditor):
 			'replace' : self.insert_text,
 			'insert_at_next_line' : self.insert_at_next_line,
 			'popup' : self.popup,
-			'refresh_open_file' : self.refresh_open_file_if_modified,
+			'refresh_open_file' : self.refresh_open_file,
 			'write_to_console' : print,
 		}
 
@@ -237,16 +237,15 @@ class UrtextEditor(BaseEditor):
 		self.download_to_local()
 		if self.save(None, save_as=False):
 			self.download_to_local()
-			future = self._UrtextProjectList.on_modified(
+			self._UrtextProjectList.on_modified(
 				self.current_open_file)
 
 	def open_http_link(self, link):
 		webbrowser.open('safari-'+link)
 	
-	def refresh_open_file_if_modified(self, filename):
+	def refresh_open_file(self, filename):
 		if filename == self.current_open_file:
-			self._UrtextProjectList.current_project.visit_file(
-				filename)
+			#self._UrtextProjectList.current_project.visit_file(filename)
 			self.open_file(
 				self.current_open_file,
 				save_first=False)
