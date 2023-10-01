@@ -17,28 +17,32 @@ class SyntaxHighlighter:
 		current_text = tv.text
 		str_obj = ObjCClass('NSMutableAttributedString').alloc().initWithString_(current_text)
 		original_str_obj = ObjCClass('NSMutableAttributedString').alloc().initWithString_(current_text)  
-
+		len_current_text = len(current_text)
 		str_obj.addAttribute_value_range_(
 			ObjCInstance(
 				c_void_p.in_dll(c,'NSFontAttributeName')), 
 			self.theme['font']['regular'], 
-			NSRange(0,len(current_text)))
+			NSRange(0,len_current_text))
 
 		str_obj.addAttribute_value_range_(
 			ObjCInstance(c_void_p.in_dll(c,'NSForegroundColorAttributeName')), 
 			self.theme['foreground_color'], 
-			NSRange(0,len(current_text)))
+			NSRange(0,len_current_text))
 
 		nested_level = 0
 		
-		found_wrappers = find_wrappers(current_text, self.all_wrappers)
+		found_wrappers = find_wrappers(
+			current_text, 
+			self.all_wrappers)
 
 		positions = sorted(found_wrappers.keys())
+		len_wrappers = len(self.theme['wrappers'])
+
 		for position in positions:
 			# if the found wrapper is a push wrapper
 			if self.push_wrapper.match(found_wrappers[position]):
 				nested_level += 1
-				if nested_level < len(self.theme['wrappers']):
+				if nested_level < len_wrappers:
 					str_obj.addAttribute_value_range_(
 					  ObjCInstance(c_void_p.in_dll(c,'NSForegroundColorAttributeName')),
 					  self.theme['wrappers'][nested_level],
@@ -46,7 +50,7 @@ class SyntaxHighlighter:
 				continue
 			
 			if self.pop_wrapper.match(found_wrappers[position]):
-				if nested_level < len(self.theme['wrappers']):
+				if nested_level < len_wrappers:
 					str_obj.addAttribute_value_range_(
 					  ObjCInstance(c_void_p.in_dll(c,'NSForegroundColorAttributeName')),
 					  self.theme['wrappers'][nested_level],

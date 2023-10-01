@@ -8,6 +8,7 @@ colors = {
     'grey6' :           UIColor.colorWithRed(0.4, green=0.4, blue=0.4, alpha=1.0),
     'unobtrusive' :     UIColor.colorWithRed(0.8392, green=0.8118, blue=0.7961, alpha=1.0),
     'white' :           UIColor.whiteColor(),
+    'black' :           UIColor.blackColor(),
     'red' :             UIColor.colorWithRed(1.000, green=0.286, blue=0.424, alpha=1.0),
     'blue_lighter' :    UIColor.colorWithRed(0.5098, green=0.6, blue=0.8471, alpha=1.0),
     'blue_brighter' :   UIColor.colorWithRed(0.28, green=0.44, blue=0.92, alpha=1.0),

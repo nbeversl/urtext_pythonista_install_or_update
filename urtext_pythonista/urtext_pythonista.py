@@ -13,6 +13,7 @@ import concurrent.futures
 from objc_util import *
 import clipboard
 from urtext_pythonista.urtext_theme_light import urtext_theme_light # default theme
+from urtext_pythonista.urtext_theme_dark import urtext_theme_dark
 from .urtext_syntax import UrtextSyntax
 
 class UrtextEditor(BaseEditor):
@@ -24,14 +25,10 @@ class UrtextEditor(BaseEditor):
 		self.setup(args)
 
 	def setup(self, args):
-		self.theme = urtext_theme_light # default
-
+		
 		self.urtext_project_path = ''
 		if 'path' in args:
 			self.urtext_project_path = args['path']
-
-		if 'theme' in args:
-			self.theme = args['theme']
 
 		self.initial_project = None
 		if 'initial_project' in args:
@@ -96,14 +93,12 @@ class UrtextEditor(BaseEditor):
 
 		self.setup_autocomplete()
 
-		self.menu_options = {
-			'Move file to another project' : self.move_file,
-			'Reload Projects' : self.reload_projects,
-			'Delete Node' : self.delete_node,
-			'Link >' : self.link_to_node,
-			'Point >>' : self.point_to_node,
-			'Pop Node' : self.pop_node
-		   }
+		self.menu_options['Move file to another project'] = self.move_file,
+		self.menu_options['Reload Projects'] = self.reload_projects,
+		self.menu_options['Delete Node'] = self.delete_node,
+		self.menu_options['Link >'] =  self.link_to_node,
+		self.menu_options['Point >>'] =  self.point_to_node,
+		self.menu_options['Pop Node'] =  self.pop_node
 
 		launch_actions = {
 			'new_node' : self.new_node

@@ -15,24 +15,33 @@ from sublemon.themes.theme_example import theme_light
 class BaseEditor(ui.View):
 
 	layout = layout
-	base_editor_theme = base_editor_theme
 	name = "Base Editor"
 
 	def __init__(self, args):
 
-		self.theme = theme_light
 		if 'theme' in args:
 			self.theme = args['theme']
-
+		else:
+			self.theme = base_editor_theme
+		self.theme_options = {}
+		if 'themes' in args:
+			for theme in args['themes']:
+				self.theme_options[theme['name']] = theme
+			if args['themes']:
+				self.theme = args['themes'][0]	
 		self.current_open_file = None
 		self.current_open_file_original_contents = None
 		self.saved = None
+		self.menu_options = {
+			'Set Theme' : self.choose_theme
+		   }
 		self.width, self.height = ui.get_screen_size()
 		self.frame = (0, self.layout['text_view_distance_from_top'], self.width, self.height)
 		self.init_text_view()
 		self.setup_obj_instances()
 		self.setup_autocomplete()
 		self.setup_syntax_highlighter(PlaintextSyntax, self.theme)
+		self.set_theme(self.theme['name'])
 
 	def show(self):
 		self.present('fullscreen', hide_title_bar=True)
@@ -53,7 +62,7 @@ class BaseEditor(ui.View):
 
 	def setup_autocomplete(self):
 		self.autoCompleter = AutoCompleter(
-			self.width, self.height, self.layout, self.base_editor_theme)
+			self.width, self.height, self.layout, self.theme)
 		self.add_subview(self.autoCompleter.search)
 		self.add_subview(self.autoCompleter.dropDown)
 
@@ -68,6 +77,17 @@ class BaseEditor(ui.View):
 			self.current_open_file_original_contents = contents
 			self.refresh_syntax_highlighting()
 
+	def choose_theme(self, sender):
+		self.autoCompleter.set_items(items=self.theme_options)
+		self.autoCompleter.set_action(self.set_theme)
+		self.autoCompleter.show()
+
+	def set_theme(self, theme):
+		self.theme = self.theme_options[theme]
+		self.tvo.setBackgroundColor(self.theme['background_color'])
+		if 'keyboard_appearance' in self.theme:
+			self.tvo.setKeyboardAppearance_(self.theme['keyboard_appearance'])
+
 	def init_text_view(self):
 		self.tv = ui.TextView()
 		self.tv.frame=(
@@ -75,7 +95,7 @@ class BaseEditor(ui.View):
 			0,
 			self.width, 
 			self.height)
-		self.tv.background_color = self.base_editor_theme['background_color']
+		
 		self.tv.width = self.width
 		self.tv.delegate = TextViewDelegate(self)
 		self.add_subview(self.tv)
@@ -96,7 +116,7 @@ class BaseEditor(ui.View):
 		button_y_position = self.layout['button_vertical_spacing']
 		button_line = ui.View()
 		button_line.flex = "WHLR"
-		button_line.background_color = self.base_editor_theme['button_line_background_color']
+		button_line.background_color = self.theme['button_line_background_color']
 		button_line.height = self.layout['button_height'] * num_button_lines 
 		button_line.height += self.layout['button_vertical_spacing'] * num_button_lines
 
@@ -106,7 +126,7 @@ class BaseEditor(ui.View):
 			new_button.action = buttons[button_character]
 			new_button.corner_radius = self.layout['button_corner_radius']
 			new_button.height = self.layout['button_height']
-
+			new_button.tint_color = self.theme['button_tint_color']
 			if button_x_position + button_width >= self.width :
 				button_y_position += self.layout['button_height'] + self.layout['button_vertical_spacing']
 				button_x_position = self.layout['button_horizontal_spacing']
@@ -117,8 +137,8 @@ class BaseEditor(ui.View):
 			button_line.add_subview(new_button)
 			button_x_position += button_width + self.layout['button_horizontal_spacing']
 			new_button.border_width = self.layout['button_border_width']
-			new_button.border_color = self.base_editor_theme['button_border_color']
-			new_button.background_color = self.base_editor_theme['button_background_color']
+			new_button.border_color = self.theme['button_border_color']
+			new_button.background_color = self.theme['button_background_color']
 
 		self.add_subview(button_line)
 		self.tvo.setInputAccessoryView_(ObjCInstance(button_line))
