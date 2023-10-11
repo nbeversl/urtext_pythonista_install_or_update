@@ -16,6 +16,7 @@ class BaseEditor(ui.View):
 
 	layout = layout
 	name = "Base Editor"
+	syntax = PlaintextSyntax
 
 	def __init__(self, args):
 
@@ -40,15 +41,17 @@ class BaseEditor(ui.View):
 		self.init_text_view()
 		self.setup_obj_instances()
 		self.setup_autocomplete()
-		self.setup_syntax_highlighter(PlaintextSyntax, self.theme)
 		self.set_theme(self.theme['name'])
+		self.setup_syntax_highlighter()
 
 	def show(self):
 		self.present('fullscreen', hide_title_bar=True)
 		self.tv.begin_editing()
 
-	def setup_syntax_highlighter(self, syntax, theme):
-		self.syntax_highlighter = SyntaxHighlighter(syntax, theme)
+	def setup_syntax_highlighter(self):
+		self.syntax_highlighter = SyntaxHighlighter(
+			self.syntax,
+			self.theme)
 
 	def setup_buttons(self, buttons):
 		if not buttons:
@@ -87,6 +90,7 @@ class BaseEditor(ui.View):
 		self.tvo.setBackgroundColor(self.theme['background_color'])
 		if 'keyboard_appearance' in self.theme:
 			self.tvo.setKeyboardAppearance_(self.theme['keyboard_appearance'])
+		self.setup_syntax_highlighter()
 
 	def init_text_view(self):
 		self.tv = ui.TextView()
@@ -162,10 +166,9 @@ class BaseEditor(ui.View):
 		if self.current_open_file:
 			current_file_contents = self.get_file_contents(self.current_open_file)
 			if self.current_open_file_original_contents != current_file_contents:
-				r = self.handle_changed_contents(self.current_open_file) 
-				#== 'Discard (Keep contents on disc)':
-				print(r)
-				return False
+				ask = self.handle_changed_contents(self.current_open_file) 
+				if ask != 'Overwrite (use current view)':
+					return False
 			contents = self.tv.text 
 			with open(self.current_open_file, 'w', encoding='utf-8') as d:
 				d.write(contents)
@@ -178,10 +181,10 @@ class BaseEditor(ui.View):
 
 	def handle_changed_contents(self, filename):
 		return dialogs.list_dialog(
-			title='File Contents Changed', 
+			title='This File\'s Contents Changed.', 
 			items=[
-				'Overwrite'
-				'Discard (Keep contents on disc)',
+				'Overwrite (use current view)',
+				'Discard (Keep contents on disk)',
 			])
 
 	def get_file_contents(self, filename):

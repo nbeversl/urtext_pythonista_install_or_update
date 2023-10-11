@@ -26,7 +26,7 @@ class SyntaxHighlighter:
 
 		str_obj.addAttribute_value_range_(
 			ObjCInstance(c_void_p.in_dll(c,'NSForegroundColorAttributeName')), 
-			self.theme['foreground_color'], 
+			self.theme['foreground_color'],
 			NSRange(0,len_current_text))
 
 		nested_level = 0
