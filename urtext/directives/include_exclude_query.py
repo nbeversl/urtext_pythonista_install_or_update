@@ -9,6 +9,7 @@ class NodeQuery:
 		added_nodes = [l for l in self.links if l in self.project.nodes]		
 
 		for arg in self.arguments:
+
 			if re.match(self.syntax.virtual_target_marker+'self', arg):
 				added_nodes.append(self.dynamic_definition.source_id)
 				break
@@ -21,11 +22,11 @@ class NodeQuery:
 							self.dynamic_definition.source_id].parent.id)
 				break
 
+
 		if not added_nodes:	
 			added_nodes = set([])
 			if self.have_flags('*'):
 				added_nodes = set([node_id for node_id in self.project.nodes])
-
 			added_nodes = added_nodes.union(_build_group_and(
 					self.project, 
 					self.params, 
@@ -52,8 +53,7 @@ class NodeQuery:
 		passed_nodes = set(passed_nodes)
 		for target_id in self.dynamic_definition.target_ids:
 			passed_nodes.discard(target_id)   
-		self.dynamic_definition.included_nodes = list(passed_nodes.union(set(added_nodes)))	
-		
+		self.dynamic_definition.included_nodes = list(passed_nodes.union(set(added_nodes)))
 		return self.dynamic_definition.included_nodes
 
 	def dynamic_output(self, nodes):
