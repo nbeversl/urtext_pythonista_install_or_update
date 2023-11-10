@@ -30,12 +30,13 @@ class BaseEditor(ui.View):
 				self.theme_options[theme['name']] = theme
 			if args['themes']:
 				self.theme = args['themes'][0]	
+		else:
+			self.theme = theme_light
+
 		self.current_open_file = None
 		self.current_open_file_original_contents = None
 		self.saved = None
-		self.menu_options = {
-			'Set Theme' : self.choose_theme
-		   }
+		self.menu_options = {'Set Theme' : self.choose_theme}
 		self.width, self.height = ui.get_screen_size()
 		self.frame = (0, self.layout['text_view_distance_from_top'], self.width, self.height)
 		self.init_text_view()
@@ -162,7 +163,7 @@ class BaseEditor(ui.View):
 
 	def save(self, sender, save_as=True):
 		if self.saved:
-			return False
+			return True
 		if self.current_open_file:
 			current_file_contents = self.get_file_contents(self.current_open_file)
 			if self.current_open_file_original_contents != current_file_contents:

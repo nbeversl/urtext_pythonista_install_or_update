@@ -22,20 +22,37 @@ class AutoCompleter:
 
 	def textfield_did_change(self, textfield):
 		new_entry = textfield.text.lower()
-		if len(new_entry) > len(self.current_entry):
+		characters_typed = len(new_entry)
+		if characters_typed > len(self.current_entry):
 			items = self.current_items
 		else:
 			items = self.items
 		
+		first_char_matching_items = [
+			i for i in items if i[:characters_typed] == new_entry[:characters_typed]
+		]
+
+		partial_matching_items = [
+			i for i in items if new_entry in i and i not in first_char_matching_items
+		]
+		
+		remaining_items = [
+			i for i in items if i not in partial_matching_items and i not in first_char_matching_items
+		]
+
 		fuzzy_options = sorted(
-			items,
+			remaining_items,
 			key = lambda option: fuzz.ratio(
 				new_entry,
 				self.items_comparision[option]), 
 			reverse=True)
-		self.dropDown.data_source.items=fuzzy_options[:30]
+		total_options = first_char_matching_items
+		total_options.extend(partial_matching_items)
+		total_options.extend(fuzzy_options)
+
+		self.dropDown.data_source.items=total_options[:30]
 		self.current_entry = new_entry
-		self.current_items = fuzzy_options
+		self.current_items = total_options
 
 	def hide(self):		
 		self.dropDown.hidden = True
@@ -48,8 +65,8 @@ class AutoCompleter:
 
 	def tableview_did_select(self, tableview, section, row):
 		self.search.text = self.dropDown.data_source.items[row]
-		return self.action(self.dropDown.data_source.items[row])
 		self.hide()
+		return self.action(self.dropDown.data_source.items[row])
 
 	def set_items(self, items):
 		if isinstance(items, dict):
@@ -61,7 +78,7 @@ class AutoCompleter:
 			for item in items:
 				self.items_comparision[item] = item.lower()
 			self.dropDown.data_source.items = self.items
-			max_items_showing = ( 
+			max_items_showing = (
 				self.view_height - self.search.height 
 				) / len(self.items)
 			if len(self.dropDown.data_source.items) > max_items_showing:
