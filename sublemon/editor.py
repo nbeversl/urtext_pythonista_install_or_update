@@ -3,6 +3,7 @@ import ui
 import dialogs
 import console
 from objc_util import *
+import concurrent.futures
 from sublemon.syntax_highlighter import SyntaxHighlighter
 from sublemon.auto_completer import AutoCompleter
 from sublemon.text_view_delegate import TextViewDelegate
@@ -33,6 +34,7 @@ class BaseEditor(ui.View):
 		else:
 			self.theme = theme_light
 
+		self.thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=10)
 		self.current_open_file = None
 		self.current_open_file_original_contents = None
 		self.saved = None

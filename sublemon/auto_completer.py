@@ -21,6 +21,9 @@ class AutoCompleter:
 		self.current_items = []
 
 	def textfield_did_change(self, textfield):
+		self.update_and_sort_options(textfield)
+
+	def update_and_sort_options(self, textfield):
 		new_entry = textfield.text.lower()
 		characters_typed = len(new_entry)
 		if characters_typed > len(self.current_entry):
@@ -29,7 +32,8 @@ class AutoCompleter:
 			items = self.items
 		
 		first_char_matching_items = [
-			i for i in items if i[:characters_typed] == new_entry[:characters_typed]
+			i for i in items if len(i) >= characters_typed - 1 and (
+				i[:characters_typed] == new_entry[:characters_typed])
 		]
 
 		partial_matching_items = [
@@ -37,22 +41,24 @@ class AutoCompleter:
 		]
 		
 		remaining_items = [
-			i for i in items if i not in partial_matching_items and i not in first_char_matching_items
+			i for i in items if i not in partial_matching_items and (
+				i not in first_char_matching_items )
 		]
 
+		self.set_items(remaining_items)
 		fuzzy_options = sorted(
 			remaining_items,
 			key = lambda option: fuzz.ratio(
 				new_entry,
-				self.items_comparision[option] if option in self.items_comparision else 0), 
+				self.items_comparision[option]) if option in self.items_comparision else 0, 
 			reverse=True)
 		total_options = first_char_matching_items
 		total_options.extend(partial_matching_items)
 		total_options.extend(fuzzy_options)
-
-		self.dropDown.data_source.items=total_options[:30]
+		if len(total_options) >= 15:
+			total_options = total_options[:15]
 		self.current_entry = new_entry
-		self.current_items = total_options
+		self.dropDown.data_source.items = total_options
 
 	def hide(self):		
 		self.dropDown.hidden = True
