@@ -606,6 +606,8 @@ class UrtextProject:
                 new_node_contents = new_node_contents.split('$cursor')
                 cursor_pos = len(new_node_contents[0])
                 new_node_contents = title + ''.join(new_node_contents)
+                if cursor_pos < len(new_node_contents) - 1:
+                    new_node_contents += ' ' 
         else:
             if one_line == None:
                 one_line = self.settings['always_oneline_meta']
@@ -771,28 +773,6 @@ class UrtextProject:
             return [n.id for n in sorted_nodes]      
         return sorted_nodes
 
-    def all_files(self):
-        self._sync_file_list()
-        files = list(self.files)
-        prefix = 0
-        sorted_files = []
-        for k in self.settings['file_index_sort']:
-            k = k.lower()
-            use_timestamp = True if k in self.settings['use_timestamp'] else False
-            file_group = [f for f in files if self.files[f].root_node and (
-                    self.files[f].root_node.id in self.nodes) and (
-                    self.nodes[self.files[f].root_node.id].metadata.get_first_value(
-                        k, use_timestamp=use_timestamp))]
-            file_group = sorted(file_group,
-                    key=lambda f: self.files[f].root_node.metadata.get_first_value(
-                            k, 
-                            use_timestamp=use_timestamp),                            
-                    reverse=use_timestamp)
-            sorted_files.extend(file_group)
-            files = list(set(files) - set(sorted_files))
-        sorted_files.extend(files)
-        return sorted_files
-
     def get_node_id_from_position(self, filename, position):
         if filename in self.files:
             for node in self.files[filename].nodes:
@@ -839,7 +819,7 @@ class UrtextProject:
 
         if not link['kind']:
             if not self.compiled:
-                self.handle_info_message(
+                return self.handle_info_message(
                     'Project is still compiling')
             return self.handle_info_message(
                 'No link found')
@@ -992,8 +972,8 @@ class UrtextProject:
 
     def _get_settings_from(self, node):
 
-        self._remove_settings_from(node)
-        self.project_settings_nodes.setdefault(node.id,{})
+        self._clear_settings_from(node)
+        self.project_settings_nodes[node.id] = {}
 
         replacements = {}
         for entry in node.metadata.entries():
@@ -1004,12 +984,12 @@ class UrtextProject:
             self.project_settings_nodes[node.id][entry.keyname] = entry.text_values()
 
             if entry.keyname in replace_settings:
-                replacements.setdefault(entry.keyname, [])
-                replacements[entry.keyname].extend(entry.text_values())
+                replacements[entry.keyname] = [e for e in entry.text_values()]
                 continue
 
             if entry.keyname == 'numerical_keys':
-                self.settings['numerical_keys'].extend(entry.text_values())
+                self.settings['numerical_keys'].extend([ 
+                    e for e in entry.text_values() if e not in self.settings['numerical_keys']])
                 continue
 
             if entry.keyname == 'file_extensions':
@@ -1077,9 +1057,8 @@ class UrtextProject:
 
             if entry.keyname not in self.settings:
                 self.settings[str(entry.keyname)] = []
-
-            self.settings[str(entry.keyname)].extend(entry.text_values())
-            self.settings[str(entry.keyname)] = list(set(self.settings[entry.keyname]))
+                self.settings[str(entry.keyname)].extend(entry.text_values())
+                continue
 
         for k in replacements.keys():
             if k in single_values_settings:
@@ -1087,7 +1066,7 @@ class UrtextProject:
             else:
                 self.settings[k] = replacements[k]
 
-    def _remove_settings_from(self, node):
+    def _clear_settings_from(self, node):
         if node.id in self.project_settings_nodes:
             for setting in self.project_settings_nodes[node.id]:
                 if setting in not_cleared:
@@ -1100,8 +1079,8 @@ class UrtextProject:
                         setting in self.settings):
                             if setting in single_values_settings:
                                 del self.settings[setting]
-                            else:
-                                self.settings[setting].remove(value)                            
+                            elif value in self.settings[setting]:
+                                self.settings[setting].remove(value)                        
                             if setting == 'extensions':
                                 for v in entry.text_values():
                                     self._remove_extensions_from_folder(v)
@@ -1113,7 +1092,7 @@ class UrtextProject:
                                 self.settings[setting] = default_project_settings()[setting]
             del self.project_settings_nodes[node.id]
 
-    def _setting_is_elsewhere(self, settings, value, omit_node):
+    def _setting_is_elsewhere(self, setting, value, omit_node):
         for node_id in [n for n in self.project_settings_nodes if n != omit_node]:
             if setting in self.project_settings_nodes[node_id]:
                 if value in self.project_settings_nodes[node_id][setting]:
@@ -1235,7 +1214,7 @@ class UrtextProject:
                     new_contents = new_contents.replace(link, replacement, 1)
             self.files[filename]._set_contents(new_contents)
 
-    def on_modified(self, filename, bypass=False):    
+    def on_modified(self, filename, bypass=False):
         return self.execute(self._on_modified, filename, bypass=bypass)
     
     def _on_modified(self, filename, bypass=False):
@@ -1264,11 +1243,14 @@ class UrtextProject:
                 for op in dd.operations:
                     op.on_node_visited(node_id)
             self._visit_file(filename)
+            status = ' (compiling)'
+            if self.compiled:
+                status = ' (compiled)'
             self.run_editor_method('status_message',
                 ''.join([
                     'UrtextProject:',
                     self.title(),
-                    ' (compiled)' if self.compiled else ' (compiling)'
+                    status
                     ]))
 
     def visit_file(self, filename):

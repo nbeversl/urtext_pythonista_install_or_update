@@ -18,4 +18,5 @@ colors = {
     'aqua_green2' :     UIColor.colorWithRed(0.6157, green=0.7686, blue=0.7176, alpha=1.0),
     'grey_reg' :        UIColor.grayColor(),
     'lightgray' :       UIColor.lightGrayColor(),
+    'highlight_yellow' : UIColor.colorWithRed(1.00, green=0.92, blue=0.00, alpha=1.0),
 }

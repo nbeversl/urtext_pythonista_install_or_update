@@ -44,7 +44,7 @@ class AutoCompleter:
 			remaining_items,
 			key = lambda option: fuzz.ratio(
 				new_entry,
-				self.items_comparision[option]), 
+				self.items_comparision[option] if option in self.items_comparision else 0), 
 			reverse=True)
 		total_options = first_char_matching_items
 		total_options.extend(partial_matching_items)

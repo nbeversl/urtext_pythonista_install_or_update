@@ -161,12 +161,13 @@ class BaseEditor(ui.View):
 			message='Note files will be saved in the Pythonista folder, also accessible via iCloud')
 		self.save(None)
 
-	def save(self, sender, save_as=True):
+	def save(self, sender, save_as=True, handle_changed_contents=True):
 		if self.saved:
 			return True
 		if self.current_open_file:
 			current_file_contents = self.get_file_contents(self.current_open_file)
-			if self.current_open_file_original_contents != current_file_contents:
+			if self.current_open_file_original_contents != current_file_contents and (
+				handle_changed_contents):
 				ask = self.handle_changed_contents(self.current_open_file) 
 				if ask != 'Overwrite (use current view)':
 					return False
