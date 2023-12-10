@@ -43,7 +43,7 @@ if proceed.lower()[0] == 'y':
 		os.path.join(
 			os.getcwd(),
 			'urtext_pythonista_install_or_update-main',
-			'urtext')
+			'urtext'))
 	
 	for l in libraries:
 		source = os.path.abspath(
