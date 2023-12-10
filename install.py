@@ -27,16 +27,21 @@ if proceed.lower()[0] == 'y':
 	
 	data = urllib.request.urlretrieve(
 		'https://github.com/nbeversl/urtext_pythonista_install_or_update/archive/refs/heads/main.zip')
-	filename = data[0]
+	dependencies_filename = data[0]
+
+	urtext_library = urllib.request.urlretrieve(
+		'https://github.com/nbeversl/urtext/archive/refs/heads/master.zip')
+	urtext_library_filename =urtext_library[0]
 	
-	z=zipfile.ZipFile(filename)
+	z = zipfile.ZipFile(dependencies_filename)
+	z.extractall()
+	z = zipfile.ZipFile(urtext_library_filename)
 	z.extractall()
 	
 	for l in libraries:
 		source = os.path.abspath(
 			os.path.join(
 				os.getcwd(),
-				# 'Documents',
 				'urtext_pythonista_install_or_update-main',
 				l))
 		if os.path.exists(source):
