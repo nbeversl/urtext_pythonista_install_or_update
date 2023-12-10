@@ -37,13 +37,20 @@ if proceed.lower()[0] == 'y':
 	z.extractall()
 	z = zipfile.ZipFile(urtext_library_filename)
 	z.extractall()
-	
+
+	source = os.path.abspath(
+		os.path.join(
+			os.getcwd(),
+			'urtext_pythonista_install_or_update-main',
+			l),
+		)
+
+	os.rename(
+		os.path.join(source, 'urtext-master'),
+		os.path.join(source, 'urtext'))
+
 	for l in libraries:
-		source = os.path.abspath(
-			os.path.join(
-				os.getcwd(),
-				'urtext_pythonista_install_or_update-main',
-				l))
+		
 		if os.path.exists(source):
 			destination = os.path.abspath(
 			os.path.join(
