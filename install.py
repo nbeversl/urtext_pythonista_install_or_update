@@ -14,43 +14,53 @@ Do you want to proceed? (y/n)
 proceed = input(message)
 if proceed.lower()[0] == 'y':
 	this_phone_path = os.path.dirname(site.getuserbase())
-	libraries = [
+	dependencies = [
 		'anytree',
 		'dateutil',
-		'sublemon',
 		'thefuzz',
-		'urtext',
-		'urtext_pythonista',
 		'six.py',
 		'app_single_launch.py',
 	]
+	libraries = {
+		'sublemon' : 'https://github.com/nbeversl/sublemon/archive/refs/heads/master.zip',
+		'urtext_pythonista' : 'https://github.com/nbeversl/urtext_pythonista/archive/refs/heads/master.zip',
+		'urtext' : 'https://github.com/nbeversl/urtext/archive/refs/heads/master.zip'
+	}
 	
 	data = urllib.request.urlretrieve(
 		'https://github.com/nbeversl/urtext_pythonista_install_or_update/archive/refs/heads/main.zip')
 	dependencies_filename = data[0]
-
-	urtext_library = urllib.request.urlretrieve(
-		'https://github.com/nbeversl/urtext/archive/refs/heads/master.zip')
-	urtext_library_filename =urtext_library[0]
-	
 	z = zipfile.ZipFile(dependencies_filename)
 	z.extractall()
-	z = zipfile.ZipFile(urtext_library_filename)
-	z.extractall()
 
-	os.rename(
-		urtext_library_filename, 
-		os.path.join(
-			os.getcwd(),
-			'urtext_pythonista_install_or_update-main',
-			'urtext'))
-	
 	for l in libraries:
-		source = os.path.abspath(
+		library = urllib.request.urlretrieve(libraries[l])
+		library_filename = library[0]
+		z = zipfile.ZipFile(library_filename)
+		z.extractall(os.getcwd())
+		os.rename(
 			os.path.join(
 				os.getcwd(),
-				'urtext_pythonista_install_or_update-main',
+				l+'-master'),
+			os.path.join(
+				os.getcwd(),
 				l))
+
+	all_libraries = list(dependencies) 
+	all_libraries.extend(list(libraries.keys()))
+	
+	for l in all_libraries:
+		if l in dependencies:
+			source = os.path.abspath(
+				os.path.join(
+					os.getcwd(),
+					'urtext_pythonista_install_or_update-main',
+					l))
+		else:
+			source = os.path.abspath(
+				os.path.join(
+					os.getcwd(),
+					l))
 		if os.path.exists(source):
 			destination = os.path.abspath(
 			os.path.join(
