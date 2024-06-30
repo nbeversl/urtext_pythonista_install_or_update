@@ -33,18 +33,16 @@ if proceed.lower()[0] == 'y':
 	z = zipfile.ZipFile(dependencies_filename)
 	z.extractall()
 
-	for l in libraries:
+	for lib in libraries:
 		library = urllib.request.urlretrieve(libraries[l])
 		library_filename = library[0]
 		z = zipfile.ZipFile(library_filename)
 		z.extractall(os.getcwd())
-		os.rename(
-			os.path.join(
-				os.getcwd(),
-				l+'-master'),
-			os.path.join(
-				os.getcwd(),
-				l))
+		existing_folder = os.path.join(os.getcwd(), lib+ '-master')
+		target_folder = os.path.join(os.getcwd(), lib)
+		if os.path.exists(target_folder):
+			shutil.rmtree(target_folder)
+		os.rename(existing_folder, target_folder)
 
 	all_libraries = list(dependencies) 
 	all_libraries.extend(list(libraries.keys()))
