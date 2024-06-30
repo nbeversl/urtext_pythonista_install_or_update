@@ -34,7 +34,7 @@ if proceed.lower()[0] == 'y':
 	z.extractall()
 
 	for lib in libraries:
-		library = urllib.request.urlretrieve(libraries[l])
+		library = urllib.request.urlretrieve(libraries[lib])
 		library_filename = library[0]
 		z = zipfile.ZipFile(library_filename)
 		z.extractall(os.getcwd())
