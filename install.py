@@ -64,7 +64,7 @@ if proceed.lower()[0] == 'y':
 			os.path.join(
 				this_phone_path,
 				'Documents',
-				'site-packages-3',
+				'site-packages',
 				l))
 			if os.path.exists(destination):
 				if os.path.isdir(destination):
@@ -81,5 +81,3 @@ if proceed.lower()[0] == 'y':
 	print('Done!')
 else:
 	print('Ok.')
-
-
