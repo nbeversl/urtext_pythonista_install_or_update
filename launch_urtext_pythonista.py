@@ -1,6 +1,8 @@
 import os 
 from app_single_launch import AppSingleLaunch
 from urtext_pythonista.urtext_pythonista import UrtextEditor
+from urtext_pythonista.urtext_theme_light import urtext_theme_light
+from urtext_pythonista.urtext_theme_dark import urtext_theme_dark
 
 # Usage:
 #
@@ -24,7 +26,11 @@ if not app.is_active():
     s = UrtextEditor({ 
         'path' : os.path.join(
             '/private/var/mobile/Library/Mobile Documents/iCloud~com~omz-software~Pythonista3/Documents/',
-            path)
+            path),
+        'themes': [
+            urtext_theme_dark,
+            urtext_theme_light,
+        ],
     })
     app.will_present(s.tv)
     s.show()
