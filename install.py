@@ -61,11 +61,11 @@ if proceed.lower()[0] == 'y':
 					l))
 		if os.path.exists(source):
 			destination = os.path.abspath(
-			os.path.join(
-				this_phone_path,
-				'Documents',
-				'site-packages',
-				l))
+				os.path.join(
+					this_phone_path,
+					'Documents',
+					'site-packages',
+					l))
 			if os.path.exists(destination):
 				if os.path.isdir(destination):
 					shutil.rmtree(destination)
@@ -75,6 +75,16 @@ if proceed.lower()[0] == 'y':
 			print('Installed or updated %s' % l)
 		else:
 			print('NO PATH %s' % source)
+	launch_script_path = os.path.abspath(
+		os.path.join(
+			os.getcwd(),
+			'urtext_pythonista_install_or_update-main',
+			'launch_urtext_pythonista.py'))
+	os.rename(launch_script_path,
+				os.path.join(
+				this_phone_path,
+				'Documents',
+				'launch_urtext_pythonista.py'))
 	shutil.rmtree(os.path.join(
 		os.getcwd(),
 		'urtext_pythonista_install_or_update-main'))
