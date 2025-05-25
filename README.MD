@@ -11,9 +11,9 @@ It is kept up to date with the latest versions **tested** versions of:
 
 ... and installs the following from their latest versions:
 
-- [urtext](https://github.com/nbeversl/urtext)
-- [sublemon](https://github.com/nbeversl/sublemon)
-- [urtext_pythonista](https://github.com/nbeversl/urtext_pythonista)
+- [urtext](https://github.com/nbeversl/urtext) (core Urtext library)
+- [sublemon](https://github.com/nbeversl/sublemon) (minimal editor using iOS TextView)
+- [urtext_pythonista](https://github.com/nbeversl/urtext_pythonista) (implements Urtext in Sublemon)
 
 The install steps can be performed manually but this script avoids that if desired.
 
