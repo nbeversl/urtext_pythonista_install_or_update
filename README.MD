@@ -7,7 +7,7 @@ It is kept up to date with the latest versions **tested** versions of:
 - [dateutil](https://github.com/dateutil/dateutil) (needed for Urtext)
 - [six](https://pypi.org/project/six/) (needed for Urtext)
 - [thefuzz](https://github.com/seatgeek/thefuzz) (needed for Sublemon)
-- [app_single_launch] (https://github.com/TPO-POMGOM/Pythonista-utilities/blob/master/app_single_launch.py) (needed for Urtext Pythonista)
+- [app_single_launch](https://github.com/TPO-POMGOM/Pythonista-utilities/blob/master/app_single_launch.py) (needed for Urtext Pythonista)
 
 ... and installs the following from their latest versions:
 
