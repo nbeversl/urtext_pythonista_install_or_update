@@ -80,6 +80,8 @@ if proceed.lower()[0] == 'y':
 			os.getcwd(),
 			'urtext_pythonista_install_or_update-main',
 			'launch_urtext_pythonista.py'))
+	if os.path.exists(launch_script_path):
+		os.remove(launch_script_path)
 	os.rename(launch_script_path,
 				os.path.join(
 				this_phone_path,
